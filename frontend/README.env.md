@@ -70,6 +70,28 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 2. Create a testnet account
 3. Fund your account with test HBAR using the testnet faucet
 
+## Using the Hedera Utilities
+
+The project includes a utility library at `src/lib/hedera.js` that provides:
+
+- Network configuration (testnet/mainnet)
+- Automatic network switching in MetaMask
+- Wallet connection helpers
+- Event listeners for account/network changes
+
+Example usage:
+
+```javascript
+import { connectWallet, switchToHederaNetwork } from '@/lib/hedera';
+
+// Connect wallet and ensure correct network
+const { address, isCorrectNetwork } = await connectWallet();
+
+if (!isCorrectNetwork) {
+  alert('Please switch to Hedera network');
+}
+```
+
 ## Resources
 
 - [Hedera EVM Documentation](https://docs.hedera.com/hedera/core-concepts/smart-contracts)

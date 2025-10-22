@@ -83,6 +83,20 @@ MAX_RETRIES=3        # Maximum number of retry attempts
 RETRY_DELAY=2.0      # Delay between retries in seconds
 ```
 
+## Validating Your Configuration
+
+Before running the main scripts, validate your configuration:
+
+```bash
+python validate_config.py
+```
+
+This script will:
+- ✓ Check that all required environment variables are set
+- ✓ Test connection to the Hedera network
+- ✓ Verify your contract configuration
+- ✓ Validate your wallet setup (if configured)
+
 ## Running the Scripts
 
 ### Calculate Reputation Scores
