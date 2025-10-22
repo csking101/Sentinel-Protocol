@@ -1,52 +1,75 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 
-class Agent {
+export class Agent {
   constructor(name, systemPrompt, tools = []) {
     this.name = name;
     this.systemPrompt = systemPrompt;
     this.tools = tools;
+    this.memory = [];
+
+    this.openAITools = this.tools.map(convertToOpenAITool);
+
     this.model = new ChatOpenAI({
       model: "gpt-4o-mini",
       temperature: 0,
-      maxOutputTokens: 500,
     });
-    this.memory = [];
   }
 
   async run(userInput) {
-    const toolOutputs = [];
-    for (const tool of this.tools) {
-      const output = await tool._call(userInput);
-      toolOutputs.push(`${tool.name}: ${output}`);
-    }
-
     const messages = [
       new SystemMessage(this.systemPrompt),
       ...this.memory,
-      new HumanMessage(
-        `User input: ${userInput}\n\nTool outputs:\n${toolOutputs.join("\n")}`
-      ),
+      new HumanMessage(userInput),
     ];
 
-    const response = await this.model.generate([messages]);
-    const reply = response.generations[0][0].text;
+    const response = await this.model.invoke(messages, {
+      tools: this.openAITools,
+    });
 
+    if (response.tool_calls && response.tool_calls.length > 0) {
+      const toolResults = [];
+
+      for (const call of response.tool_calls) {
+        const tool = this.tools.find((t) => t.name === call.name);
+        if (!tool) continue;
+
+        const args = call.args || {};
+        const output = await tool.invoke(args);
+
+        // ✅ create ToolMessage with tool_call_id
+        toolResults.push(
+          new ToolMessage({
+            tool_call_id: call.id,
+            name: call.name,
+            content: output,
+          })
+        );
+      }
+
+      // LLM finalizes after seeing the tool results
+      const finalResponse = await this.model.invoke([
+        ...messages,
+        response,
+        ...toolResults,
+      ]);
+
+      this.memory.push(new HumanMessage(userInput));
+      this.memory.push(finalResponse);
+
+      return finalResponse.content;
+    }
+
+    // No tools called
     this.memory.push(new HumanMessage(userInput));
-    this.memory.push(new AIMessage(reply));
+    this.memory.push(response);
 
-    return reply;
+    return response.content;
   }
 }
-
-// --- 3. Example usage ---
-// (async () => {
-//   const agent = new Agent(
-//     "Agent1",
-//     "You are a helpful assistant that uses tools to answer questions.",
-//     [new CustomTool()]
-//   );
-
-//   const output = await agent.run("Demonstrate the custom tool.");
-//   console.log("Agent output:", output);
-// })();
