@@ -1,0 +1,137 @@
+[
+		{
+			"inputs": [],
+			"stateMutability": "nonpayable",
+			"type": "constructor"
+		},
+		{
+			"anonymous": false,
+			"inputs": [
+				{
+					"indexed": false,
+					"internalType": "string",
+					"name": "token",
+					"type": "string"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "market",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "fundamental",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "risk",
+					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"internalType": "uint256",
+					"name": "reputation",
+					"type": "uint256"
+				}
+			],
+			"name": "ScoresUpdated",
+			"type": "event"
+		},
+		{
+			"inputs": [],
+			"name": "getAllTokens",
+			"outputs": [
+				{
+					"internalType": "string[]",
+					"name": "",
+					"type": "string[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "string",
+					"name": "token",
+					"type": "string"
+				}
+			],
+			"name": "getScores",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "marketStability",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "fundamentalStrength",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "risk",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "reputationScore",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [],
+			"name": "owner",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "string",
+					"name": "token",
+					"type": "string"
+				},
+				{
+					"internalType": "uint256",
+					"name": "marketStability",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "fundamentalStrength",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "risk",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "reputationScore",
+					"type": "uint256"
+				}
+			],
+			"name": "setScores",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		}
+	]
