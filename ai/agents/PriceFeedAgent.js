@@ -3,21 +3,59 @@ import { DynamicStructuredTool } from "@langchain/core/tools";
 
 const priceFeedTool = new DynamicStructuredTool({
   name: "price_feed",
-  description: "Fetch live crypto prices from CoinGecko given a coin ID (e.g. 'bitcoin', 'ethereum').",
+  description: `Fetch live crypto prices from CoinGecko given a coin ID and the time window.
+  
+  The available coins IDs are:
+  - matic-network
+  - aave
+  - doge
+  - usd-coin
+  - ethereum
+
+  The time window available is:
+  - 1h
+  - 6h
+  `
+  // - 12h
+  // - 1d
+  // - 1w
+  // - 2w
+  // - 1m
+  // - 3m
+  // - 6m
+  // - 1y
+  ,
   schema: {
     type: "object",
     properties: {
       symbol: {
         type: "string",
-        description: "The coin ID, like 'bitcoin' or 'ethereum'.",
+        description: "The coin ID, like 'aave' or 'ethereum'.",
       },
+      window: {
+        type: "string",
+        description: "The time window for the price data, like '1d' or '1w'.",
+      }
     },
-    required: ["symbol"],
+    required: ["symbol","window"],
   },
-  func: async ({ symbol }) => {
+  func: async ({ symbol,window }) => {
     try {
+      const to_timestamp = Math.floor(Date.now() / 1000);
+      const from_timestamp = to_timestamp - {
+        "1h": 3600,
+        "6h": 21600,
+        "12h": 43200,
+        "1d": 86400,
+        "1w": 604800,
+        "2w": 1209600,
+        "1m": 2592000,
+        "3m": 7776000,
+        "6m": 15552000,
+        "1y": 31536000,
+      }[window];
       const res = await fetch(
-        `https://api.coingecko.com/api/v3/simple/price?ids=${symbol}&vs_currencies=usd`
+        `https://api.coingecko.com/api/v3/simple/price?ids=${symbol}&from=${from_timestamp}&to=${to_timestamp}&vs_currencies=usd`
       );
       const data = await res.json();
       if (data[symbol]) {
@@ -33,9 +71,10 @@ const priceFeedTool = new DynamicStructuredTool({
 
 export class PriceFeedAgent extends Agent {
   constructor(name = "PriceFeedAgent") {
+    const priceFeedAgentSystemPrompt = `You are a crypto assistant. When asked about prices, use the price_feed tool to fetch live prices from CoinGecko. You will be provided with a coin ID and a time window to get the price data.`;
     super(
       name,
-      "You are a crypto assistant. When asked about prices, use the price_feed tool to fetch live prices from CoinGecko.",
+      priceFeedAgentSystemPrompt,
       [priceFeedTool],
       true
     );
@@ -47,7 +86,20 @@ export class PriceFeedAgent extends Agent {
 }
 
 // --- Example usage ---
-(async () => {
-  const agent = new PriceFeedAgent();
-  console.log(await agent.getPrice("bitcoin"));
-})();
+// (async () => {
+//   const agent = new PriceFeedAgent();
+//   console.log(await agent.getPrice("aave"));
+// })();
+
+// (async () => {
+//   const url = 'https://api.coingecko.com/api/v3/coins/aave/market_chart/range?from=1761057192&to=1763721992&vs_currency=usd';
+// const options = {method: 'GET', headers: {'x-cg-demo-api-key': ''}, body: undefined};
+
+// try {
+//   const response = await fetch(url, options);
+//   const data = await response.json();
+//   console.log(data);
+// } catch (error) {
+//   console.error(error);
+// }
+// })();
