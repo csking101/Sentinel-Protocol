@@ -36,7 +36,8 @@ export class PriceFeedAgent extends Agent {
     super(
       name,
       "You are a crypto assistant. When asked about prices, use the price_feed tool to fetch live prices from CoinGecko.",
-      [priceFeedTool]
+      [priceFeedTool],
+      true
     );
   }
 
