@@ -1,5 +1,8 @@
 import { Agent } from "./BaseAgent.js";
 import { DynamicStructuredTool } from "@langchain/core/tools";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const priceFeedTool = new DynamicStructuredTool({
   name: "price_feed",
