@@ -22,76 +22,133 @@ async function orchestrate(userQuery, portfolio) {
 
   // --- Example user settings ---
   const userSettings = {
-    maxSwapPercentage: 50, // max % of a token that can be swapped
+    maxSwapPercentage: 50,
     allowedTokens: ["ETH", "AAVE", "USDC"],
     allowedActions: ["swap", "stake", "unstake"],
     maxDailyTransactions: 5,
     dailySwapLimits: { ETH: 5, AAVE: 100, USDC: 1000 },
-    portfolio, // include the user's current portfolio
+    portfolio,
   };
 
-  let finalAction = null;
-  let iteration = 0;
-  const maxIterations = 3;
+  console.log(`\n🎯 Starting orchestration for query: "${userQuery}"`);
+  console.log("💼 Current Portfolio:", portfolio);
 
-  // --- A2A loop ---
-  while (iteration < maxIterations) {
-    console.log(`\n--- Iteration ${iteration + 1} ---`);
+  const maxAttempts = 2; // Maximum authorization attempts
+  let attempt = 0;
+  let currentQuery = userQuery;
 
-    // Gather context from other agents
-    const reputationData = await reputationAgent.assessReputation(userQuery);
-    const newsData = await newsAgent.getNews(userQuery);
-    const priceData = await priceAgent.getPrice(userQuery);
+  while (attempt < maxAttempts) {
+    attempt++;
+    console.log(`\n${"=".repeat(80)}`);
+    console.log(`📍 Attempt ${attempt}/${maxAttempts}`);
+    console.log(`${"=".repeat(80)}`);
 
-    console.log("📰 News:", newsData);
-    console.log("📊 Reputation:", reputationData);
-    console.log("💰 Prices:", priceData);
-    console.log("💼 Portfolio:", portfolio);
+    // Step 1: DecisionAgent proposes action with A2A communication
+    // It can query up to 3 other agents autonomously
+    console.log("\n🤖 DecisionAgent consulting other agents (max 3 queries)...");
+    
+    const proposedAction = await decisionAgent.proposeDynamicAction(
+      currentQuery,
+      {
+        getReputation: async (query) => {
+          console.log("  📊 DecisionAgent → ReputationAgent");
+          return await reputationAgent.assessReputation(query || currentQuery);
+        },
+        getNews: async (query) => {
+          console.log("  📰 DecisionAgent → NewsAgent");
+          return await newsAgent.getNews(query || currentQuery);
+        },
+        getPrices: async (query) => {
+          console.log("  💰 DecisionAgent → PriceAgent");
+          return await priceAgent.getPrice(query || currentQuery);
+        },
+        getPortfolio: async () => {
+          console.log("  💼 DecisionAgent → Portfolio");
+          return portfolio;
+        },
+      },
+      3 // Max 3 A2A queries
+    );
 
-    // Propose action dynamically
-    const proposedAction = await decisionAgent.proposeDynamicAction(userQuery, {
-      getReputation: async () => reputationData,
-      getNews: async () => newsData,
-      getPrices: async () => priceData,
-      getPortfolio: async () => portfolio,
-    }, 3);
+    console.log("\n✨ DecisionAgent proposed action:", proposedAction);
 
-    console.log("🤖 Decision Agent proposed:", proposedAction);
-
-    // Validate action with AuthorizationAgent
+    // Step 2: Every proposed action goes through AuthorizationAgent
+    console.log("\n🔐 Sending to AuthorizationAgent for validation...");
     const authResult = await authAgent.authorizeAction(proposedAction, userSettings);
-    console.log("✅ Authorization result:", authResult);
+    console.log("📋 Authorization result:", authResult);
 
     if (authResult.authorized) {
-      finalAction = proposedAction;
-      break;
+      // Success! Action is authorized
+      console.log("\n✅ Action AUTHORIZED!");
+      console.log("\n🎯 Final authorized action:", proposedAction);
+      return proposedAction;
     } else {
-      // If not authorized, instruct the DecisionAgent to adjust
-      console.log(`⚠ Action not authorized: ${authResult.reason}`);
-      userQuery = `Previous proposed action was rejected: ${authResult.reason}. Adjust the action while keeping user intent. Original query: ${userQuery}`;
+      // Action rejected, provide feedback to DecisionAgent
+      console.log(`\n❌ Action REJECTED: ${authResult.reason}`);
+      
+      if (attempt < maxAttempts) {
+        console.log("\n🔄 Providing feedback to DecisionAgent for adjustment...");
+        // Update query with rejection feedback for next iteration
+        currentQuery = `
+Previous action was rejected by AuthorizationAgent.
+Rejection reason: ${authResult.reason}
+
+User settings for reference:
+- Max swap percentage: ${userSettings.maxSwapPercentage}%
+- Allowed tokens: ${userSettings.allowedTokens.join(", ")}
+- Allowed actions: ${userSettings.allowedActions.join(", ")}
+- Current portfolio: ${JSON.stringify(portfolio)}
+
+Original user request: ${userQuery}
+
+Please propose a new action that addresses the rejection reason while fulfilling the user's intent.
+        `.trim();
+      }
     }
-
-    iteration++;
   }
 
-  if (!finalAction) {
-    console.log("\n❌ Could not generate an authorized action within the iteration limit.");
-    return null;
-  }
-
-  console.log("\n🎯 Final authorized action:", finalAction);
-  return finalAction;
+  // Failed to get authorized action after max attempts
+  console.log("\n❌ Could not generate an authorized action within the attempt limit.");
+  return null;
 }
 
 // --- Example usage ---
-(async () => {
-  const samplePortfolio = {
-    ETH: 2.0,
-    AAVE: 50,
-    USDC: 1000
-  };
+// (async () => {
+//   const samplePortfolio = {
+//     ETH: 2.0,
+//     AAVE: 50,
+//     USDC: 1000
+//   };
 
-  const userQuery = "Rebalance my portfolio to reduce ETH exposure and increase AAVE holdings.";
+//   // Test with different scenarios
+//   const testCases = [
+//     {
+//       query: "Rebalance my portfolio to reduce ETH exposure and increase AAVE holdings.",
+//       portfolio: samplePortfolio
+//     },
+//     {
+//       query: "Swap all my ETH to AAVE", // Should fail due to max percentage
+//       portfolio: samplePortfolio
+//     },
+//     {
+//       query: "Swap 0.5 ETH to AAVE based on current market conditions",
+//       portfolio: samplePortfolio
+//     }
+//   ];
 
-  const finalAction = await orchestrate(userQuery, samplePortfolio);
-})();
+//   for (const testCase of testCases) {
+//     console.log("\n\n" + "█".repeat(100));
+//     console.log(`TEST CASE: ${testCase.query}`);
+//     console.log("█".repeat(100));
+    
+//     const result = await orchestrate(testCase.query, testCase.portfolio);
+    
+//     if (result) {
+//       console.log("\n✅ TEST PASSED - Action authorized and returned");
+//     } else {
+//       console.log("\n❌ TEST FAILED - No authorized action found");
+//     }
+    
+//     console.log("\n" + "█".repeat(100));
+//   }
+// })();
