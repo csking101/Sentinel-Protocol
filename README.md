@@ -53,9 +53,11 @@ This project uses the Hedera EVM-compatible network. You'll need to configure:
 - **API Keys**: CoinGecko, Covalent for reputation data
 - **Wallet**: Hedera-compatible wallet with HBAR for gas fees
 
-Detailed setup instructions are available in:
-- [frontend/README.env.md](frontend/README.env.md)
-- [reputation_layer/README.env.md](reputation_layer/README.env.md)
+📚 **Complete Setup Guide**: See [HEDERA_SETUP.md](HEDERA_SETUP.md) for a comprehensive guide to getting started with Hedera EVM.
+
+Detailed configuration documentation:
+- [frontend/README.env.md](frontend/README.env.md) - Frontend environment variables
+- [reputation_layer/README.env.md](reputation_layer/README.env.md) - Backend environment variables
 
 ## Architecture
 
