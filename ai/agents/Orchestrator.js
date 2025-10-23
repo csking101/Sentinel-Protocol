@@ -109,7 +109,7 @@ Please propose a new action that addresses the rejection reason while fulfilling
 
   // Failed to get authorized action after max attempts
   console.log("\n❌ Could not generate an authorized action within the attempt limit.");
-  return null;
+  return {};
 }
 
 // --- Example usage ---
