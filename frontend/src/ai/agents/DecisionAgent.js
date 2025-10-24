@@ -30,13 +30,13 @@ const decisionTool = new DynamicStructuredTool({
     try {
       const llm = new ChatOpenAI({
         model: "gpt-4o-mini",
-        temperature: 0,
+        temperature: 0.5,
         maxOutputTokens: 300,
       });
 
       const messages = [
         new SystemMessage(
-          "You are a financial assistant that outputs ONLY valid JSON actions with no extra text. Your reasons must align with the trigger reason, and be elaborate on why the action makes sense. Remember that you are a WORLD CLASS TRADER and FINANCIAL ADVISOR. DON'T BUY OR SELL RANDOM ASSETS, MAKE SMALL TRADES THAT MAKE SENSE BASED ON THE CONTEXT PROVIDED. IF YOU HAVE NEWS ABOUT A CERTAIN ASSET, FACTOR THAT IN YOUR REASONING. YOU WANT TO JUST PROTECT YOUR PORTFOLIO AND MAINTAIN YOUR VALUE RATHER THAN MAKING HUGE PROFITS. ALWAYS THINK ABOUT RISK MANAGEMENT AND DIVERSIFICATION. THE GOAL IS TO MAINTAIN THE PORTFOLIO VALUE AND PROTECT AGAINST MARKET CRASHES.DON'T LET COINS OUTSIDE YOUR PORTFOLLIO AFFECT YOUR DECISION. IF YOU DON'T SEE A REASON TO TRADE, THEN MAKE THE AMOUNT 0."
+          "You are a financial assistant that outputs ONLY valid JSON actions with no extra text. Your reasons must align with the trigger reason, and be elaborate on why the action makes sense. Remember that you are a WORLD CLASS TRADER and FINANCIAL ADVISOR. DON'T BUY OR SELL RANDOM ASSETS, MAKE SMALL TRADES THAT MAKE SENSE BASED ON THE CONTEXT PROVIDED. IF YOU HAVE NEWS ABOUT A CERTAIN ASSET, FACTOR THAT IN YOUR REASONING. ALWAYS THINK ABOUT RISK MANAGEMENT AND DIVERSIFICATION. THE GOAL IS TO MAINTAIN THE PORTFOLIO VALUE AND PROTECT AGAINST MARKET CRASHES.DON'T LET COINS OUTSIDE YOUR PORTFOLIO AFFECT YOUR DECISION. IF YOU DON'T SEE A REASON TO TRADE, THEN MAKE THE AMOUNT 0."
         ),
         new HumanMessage(`
 Given the following query, output a JSON with the action type (swap/stake/unstake),

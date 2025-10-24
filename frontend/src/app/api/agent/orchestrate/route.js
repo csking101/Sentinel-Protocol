@@ -108,19 +108,17 @@ export async function POST(request) {
             };
         } else {
             console.log("Action authorized.");
+            //Execute action
+            return Response.json(proposedAction);
         }
 
     }
-
-    if (authorized) {
-        //Execute the action using the Execution Agent
-    } else {
         console.log("Maximum revisions reached. Action not authorized.");
         return Response.json(
           { success: false, error: "Action not authorized after maximum revisions." },
           { status: 403 }
         );
-    }
+    
   } catch (error) {
     console.error("Error in orchestrator:", error);
     return Response.json(
