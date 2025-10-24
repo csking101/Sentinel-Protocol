@@ -80,11 +80,13 @@ export async function POST(request) {
             reputation: reputationAgentResponse || "",
         };
         
-        const proposedAction = await decisionAgent.proposeAction(context);
+        const portfolio = body.portfolio ;
+
+        const proposedAction = await decisionAgent.proposeAction(context,portfolio);
 
         console.log("Proposed Action:", proposedAction);
 
-        //This is hard coded and add the user portfolio context as well
+        //This is hard coded and add the user portfolio context as well and proper user settings input
         const userSettings = {
             maxSwapPercentage: 50,
             allowedTokens: ["ETH", "AAVE", "USDC"],

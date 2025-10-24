@@ -7,7 +7,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 const decisionTool = new DynamicStructuredTool({
   name: "generate_action",
   description: `
-    Generates a proposed action (swap/stake/unstake) based on a query.
+    Generates a proposed action (swap/stake/unstake) based on a query. If no action, make the amount as 0
     The output must be a valid JSON object with the following structure:
     {
       type: "swap" | "stake" | "unstake",
@@ -26,7 +26,7 @@ const decisionTool = new DynamicStructuredTool({
     },
     required: ["query"],
   },
-  func: async ({ query }) => {
+  func: async ({ query,portfolio }) => {
     try {
       const llm = new ChatOpenAI({
         model: "gpt-4o-mini",
@@ -36,13 +36,15 @@ const decisionTool = new DynamicStructuredTool({
 
       const messages = [
         new SystemMessage(
-          "You are a financial assistant that outputs ONLY valid JSON actions with no extra text."
+          "You are a financial assistant that outputs ONLY valid JSON actions with no extra text. Your reasons must align with the trigger reason, and be elaborate on why the action makes sense. Remember that you are a WORLD CLASS TRADER and FINANCIAL ADVISOR. DON'T BUY OR SELL RANDOM ASSETS, MAKE SMALL TRADES THAT MAKE SENSE BASED ON THE CONTEXT PROVIDED. IF YOU HAVE NEWS ABOUT A CERTAIN ASSET, FACTOR THAT IN YOUR REASONING. YOU WANT TO JUST PROTECT YOUR PORTFOLIO AND MAINTAIN YOUR VALUE RATHER THAN MAKING HUGE PROFITS. ALWAYS THINK ABOUT RISK MANAGEMENT AND DIVERSIFICATION. THE GOAL IS TO MAINTAIN THE PORTFOLIO VALUE AND PROTECT AGAINST MARKET CRASHES.DON'T LET COINS OUTSIDE YOUR PORTFOLLIO AFFECT YOUR DECISION. IF YOU DON'T SEE A REASON TO TRADE, THEN MAKE THE AMOUNT 0."
         ),
         new HumanMessage(`
 Given the following query, output a JSON with the action type (swap/stake/unstake),
 fromToken, toToken, amount, unit, reason, and timestamp (in milliseconds):
 
 Query: "${query}"
+
+User Portfolio Context: ${JSON.stringify(portfolio)}
 
 Output MUST be valid JSON. Do NOT include explanations or markdown.
         `)
@@ -84,7 +86,7 @@ const feedTool = new DynamicStructuredTool({
 
           const messages = [
             new SystemMessage(
-              "You are an assistant that determines required data feeds based on user queries."
+              "You are an assistant that determines required data feeds based on user queries. If you are unsure, then you should take all the fields as input."
             ),
             new HumanMessage(`
 Given the following query, output a JSON indicating which data feeds are required:
@@ -105,7 +107,7 @@ Based on the user query, determine which data feeds are required:
 
 
 Output MUST be valid JSON with boolean fields: priceFeed, newsFeed, reputationFeed.
-Do NOT include explanations or markdown.
+Do NOT include explanations or markdown. If you're unsure, see all the fields.
             `)
           ];
 
@@ -129,7 +131,7 @@ export class DecisionAgent extends Agent {
   constructor(name = "DecisionAgent") {
     const systemPrompt = `
       You propose financial actions based on user queries.
-      Always generate actions in structured JSON using the 'generate_action' tool. Make sure your proposed action is inline with the trigger reason. It has to make sense. Remember that you are a WORLD CLASS TRADER and FINANCIAL ADVISOR.
+      Always generate actions in structured JSON using the 'generate_action' tool. Make sure your proposed action is inline with the trigger reason. It has to make sense. Remember that you are a WORLD CLASS TRADER and FINANCIAL ADVISOR. For example, if the price of ETH is going down, then you should consider proposing to swap ETH for a stablecoin like USDC. 
     `;
     super(name, systemPrompt, [decisionTool], false);
   }
@@ -139,8 +141,8 @@ export class DecisionAgent extends Agent {
   }
 
   // Basic proposal using the decision tool
-  async proposeAction(query) {
-    return await decisionTool._call({ query });
+  async proposeAction(query, portfolio) {
+    return await decisionTool._call({ query, portfolio });
   }
 
 
