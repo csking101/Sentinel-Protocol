@@ -74,17 +74,25 @@ const priceFeedTool = new DynamicStructuredTool({
 
 export class PriceFeedAgent extends Agent {
   constructor(name = "PriceFeedAgent") {
-    const priceFeedAgentSystemPrompt = `You are a crypto assistant. When asked about prices, use the price_feed tool to fetch live prices from CoinGecko. You will be provided with a coin ID and a time window to get the price data.`;
+    const priceFeedAgentSystemPrompt = `You are a crypto assistant. When asked about prices, use the price_feed tool to fetch live prices from CoinGecko. You will be provided with a coin ID and a time window to get the price data. For regular triggers, you need to think about what coins you should get prices for based on recent market movements.`;
     super(
       name,
       priceFeedAgentSystemPrompt,
       [priceFeedTool],
-      true
+      false
     );
   }
 
   async getPrice(symbol) {
     return await this.run(`What is the price of ${symbol}?`);
+  }
+
+  async getAllPrices() {
+    return await this.run(`Get me the latest prices for matic-network, aave, doge, usd-coin, and ethereum for the 1d time window.`);
+  }
+
+  async getResponse(query) {
+    return await this.run(query);
   }
 }
 

@@ -73,8 +73,8 @@ const newsFeedTool = new DynamicStructuredTool({
 
 export class NewsFeedAgent extends Agent {
   constructor(name = "NewsFeedAgent") {
-    const newsFeedAgentSystemPrompt = `You are a news assistant. When asked about news articles, use the news_feed tool to fetch live news from NewsAPI. You will be provided with a coin ID, a topic, and the number of articles to get the news data.`;
-    super(name, newsFeedAgentSystemPrompt, [newsFeedTool], true);
+    const newsFeedAgentSystemPrompt = `You are a news assistant. When asked about news articles, use the news_feed tool to fetch live news from NewsAPI. You will be provided with a coin ID, a topic, and the number of articles to get the news data. For regular triggers, you need to think about what coins you should get news for based on recent market movements.`;
+    super(name, newsFeedAgentSystemPrompt, [newsFeedTool], false);
   }
 
   async getNews(query) {

@@ -81,10 +81,10 @@ export class ReputationDecisionAgent extends Agent {
   constructor(name = "ReputationDecisionAgent") {
     const systemPrompt = `
       You are a blockchain analyst agent.
-      You always fetch on-chain reputation scores using the 'reputation_checker' tool before giving advice.
-      Provide a short explanation and recommendation based on the scores.
+      You always fetch on-chain reputation scores using the 'reputation_checker' tool before giving advice. For regular triggers, you need to think about which tokens might have reputation issues based on recent market movements.
+      Provide a short explanation and recommendation based on the scores. Mention the scale of your score being 0-1, where 1 is the best reputation.
     `;
-    super(name, systemPrompt, [reputationTool], true);
+    super(name, systemPrompt, [reputationTool], false);
   }
 
   async assessReputation(query) {

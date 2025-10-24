@@ -64,57 +64,86 @@ Output MUST be valid JSON. Do NOT include explanations or markdown.
   }
 });
 
+const feedTool = new DynamicStructuredTool({
+      name: "choose_feeds",
+      description: "Determines which data feeds are required based on the user query.",
+      schema: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "User query describing the desired action" }
+        },
+        required: ["query"],
+      },
+      func: async ({ query }) => {
+        try {
+          const llm = new ChatOpenAI({
+            model: "gpt-4o-mini",
+            temperature: 0,
+            maxOutputTokens: 200,
+          });
+
+          const messages = [
+            new SystemMessage(
+              "You are an assistant that determines required data feeds based on user queries."
+            ),
+            new HumanMessage(`
+Given the following query, output a JSON indicating which data feeds are required:
+
+Query: "${query}"
+
+Based on the user query, determine which data feeds are required:
+      - Price Feed
+      - News Feed
+      - Reputation Feed
+
+      Output a JSON object with boolean fields for each feed, e.g.:
+      {
+        priceFeed: true,
+        newsFeed: false,
+        reputationFeed: true
+      }
+
+
+Output MUST be valid JSON with boolean fields: priceFeed, newsFeed, reputationFeed.
+Do NOT include explanations or markdown.
+            `)
+          ];
+
+          const response = await llm.generate([messages]);
+          let jsonText = response.generations[0][0].text.trim();
+
+          // Remove code block backticks if present
+          if (jsonText.startsWith("```")) {
+            jsonText = jsonText.replace(/```(?:json)?/g, "").trim();
+          }
+
+          return JSON.parse(jsonText);
+        } catch (err) {
+          return { error: `Failed to determine feeds: ${err.message}` };
+        }
+      }
+    });
+
 // --- Decision Agent ---
 export class DecisionAgent extends Agent {
   constructor(name = "DecisionAgent") {
     const systemPrompt = `
       You propose financial actions based on user queries.
-      Always generate actions in structured JSON using the 'generate_action' tool.
+      Always generate actions in structured JSON using the 'generate_action' tool. Make sure your proposed action is inline with the trigger reason. It has to make sense. Remember that you are a WORLD CLASS TRADER and FINANCIAL ADVISOR.
     `;
-    super(name, systemPrompt, [decisionTool], true);
+    super(name, systemPrompt, [decisionTool], false);
+  }
+
+  async chooseRequiredFeed(query){
+    return await feedTool._call({ query });
   }
 
   // Basic proposal using the decision tool
   async proposeAction(query) {
-    return decisionTool._call({ query });
+    return await decisionTool._call({ query });
   }
 
-  // Dynamic proposal that queries other agents up to maxQueries
-  async proposeDynamicAction(userQuery, agentFunctions, maxQueries = 3) {
-    let context = `User query: ${userQuery}\n\n`;
-    let lastAction;
 
-    for (let i = 0; i < maxQueries; i++) {
-      context += `\nIteration ${i + 1}:\n`;
-
-      // Optionally call reputation agent
-      if (agentFunctions.getReputation) {
-        const rep = await agentFunctions.getReputation(userQuery);
-        context += `Reputation Data: ${JSON.stringify(rep)}\n`;
-      }
-
-      // Optionally call news agent
-      if (agentFunctions.getNews) {
-        const news = await agentFunctions.getNews(userQuery);
-        context += `News Data: ${JSON.stringify(news)}\n`;
-      }
-
-      // Optionally call price agent
-      if (agentFunctions.getPrices) {
-        const prices = await agentFunctions.getPrices(userQuery);
-        context += `Price Data: ${JSON.stringify(prices)}\n`;
-      }
-
-      // Ask decisionTool for an action based on accumulated context
-      const actionQuery = `Based on the following context, propose a structured action in JSON:\n${context}`;
-      lastAction = await this.proposeAction(actionQuery);
-
-      // Include the proposed action in context for the next iteration
-      context += `Proposed Action: ${JSON.stringify(lastAction)}\n`;
-    }
-
-    return lastAction;
-  }
 }
 
 // --- Example usage ---
