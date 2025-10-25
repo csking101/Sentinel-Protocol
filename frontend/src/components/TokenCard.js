@@ -91,7 +91,7 @@ export default function TokenCard({ token, index }) {
               ) : (
                 <TrendingDown className="w-3.5 h-3.5" />
               )}
-              {token.change >= 0 ? '+' : ''}{token.change}%
+              {token.change >= 0 ? '+' : ''}{token.change.toFixed(2)}%
             </div>
           </div>
         </div>

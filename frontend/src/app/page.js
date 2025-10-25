@@ -6,75 +6,7 @@ import TokenCard from '@/components/TokenCard';
 import AgentOperationsCard from '@/components/AgentOperationsCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, Activity } from 'lucide-react';
-
-// Token definitions with CoinGecko IDs
-const tokens = [
-  { name: 'Ethereum', symbol: 'ETH', balance: 5.0, coinId: 'ethereum', color: 'bg-linear-to-br from-purple-500 to-indigo-600', reputationScore: 92 },
-  { name: 'Dogecoin', symbol: 'DOGE', balance: 1000.23, coinId: 'dogecoin', color: 'bg-linear-to-br from-yellow-500 to-orange-500', reputationScore: 58 },
-  { name: 'USD Coin', symbol: 'USDC', balance: 1000.0, coinId: 'usd-coin', color: 'bg-linear-to-br from-blue-500 to-cyan-500', reputationScore: 98 },
-  { name: 'Polygon', symbol: 'MATIC', balance: 1.02, coinId: 'polygon-ecosystem-token', color: 'bg-linear-to-br from-purple-600 to-pink-500', reputationScore: 75 },
-  { name: 'Aave', symbol: 'AAVE', balance: 0.001, coinId: 'aave', color: 'bg-linear-to-br from-teal-500 to-emerald-600', reputationScore: 84 },
-];
-
-// Utility: generate fallback random price history
-const generateFallbackHistory = (currentPrice, points = 7, volatility = 0.05) => {
-  const history = [];
-  for (let i = 0; i < points; i++) {
-    const price = currentPrice * (1 + (Math.random() - 0.5) * volatility);
-    const date = new Date();
-    date.setDate(date.getDate() - (points - i - 1));
-    history.push({ time: `${date.getDate()}/${date.getMonth() + 1}`, price: parseFloat(price.toFixed(4)) });
-  }
-  return history;
-};
-
-// Fetch daily price history from CoinGecko (free plan)
-const fetchPriceHistory = async (coinId, currency = "usd", days = 7) => {
-  try {
-    const response = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=${currency}&days=${days}`
-    );
-    const data = await response.json();
-
-    if (!data.prices || !Array.isArray(data.prices)) {
-      console.warn(`No price data for ${coinId}, using fallback.`);
-      return generateFallbackHistory(1); // default fallback price = 1
-    }
-
-    return data.prices.map(([timestamp, price]) => {
-      const date = new Date(timestamp);
-      const day = date.getDate();
-      const month = date.getMonth() + 1;
-      return { time: `${day}/${month}`, price };
-    });
-  } catch (error) {
-    console.error(`Error fetching ${coinId} price history:`, error);
-    return generateFallbackHistory(1); // fallback
-  }
-};
-
-// Main function: fetch all tokens with price history and latest price
-export const loadTokens = async () => {
-  const enrichedTokens = await Promise.all(
-    tokens.map(async (token) => {
-      const priceHistory = await fetchPriceHistory(token.coinId);
-      const latestPrice = priceHistory.length > 0 ? priceHistory[priceHistory.length - 1].price : 1;
-      const change = priceHistory.length > 1 
-        ? ((latestPrice - priceHistory[0].price) / priceHistory[0].price) * 100 
-        : 0;
-
-      return {
-        ...token,
-        price: parseFloat(latestPrice.toFixed(4)),
-        change: parseFloat(change.toFixed(2)),
-        priceHistory,
-      };
-    })
-  );
-
-  return enrichedTokens;
-};
-
+import { loadTokens } from './lib';
 
 const initialOperations = [
   {
@@ -161,7 +93,7 @@ export default function Home() {
     const interval = setInterval(() => {
       setTokens((prev) =>
         prev.map((t) => {
-          const f = 1 + (Math.random() - 0.5) * 0.0002;
+          const f = 1 + (Math.random() - 0.75) * 0.0002;
           const newPrice = t.price * f;
           const newHist = [...t.priceHistory.slice(1), { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), price: newPrice }];
           return { ...t, price: newPrice, change: ((newPrice - t.price) / t.price) * 100, priceHistory: newHist };
