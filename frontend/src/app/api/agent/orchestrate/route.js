@@ -1,129 +1,130 @@
-/*
-Let the trigger have a reason or a description. The two types can be a regular periodic trigger or due a  an external event (like a price drop).
-On trigger, the flow will be:
-1. Price Feed Agent fetches latest prices.
-2. News Agent fetches recent news.
-3. Reputation Agent fetches reputation data.
-4. Decision Agent proposes action based on aggregated data.
-5. The decision agent sends this proposed action to the authorization agent.
-6. If authorized, the action is executed; Otherwise, the decision is revised. The Decision agent can talk to any other of the agents in the meanwhile to gather more information if needed. Finally, it will send the revised action to the authorization agent again. It can revise its action up to 2 times.
-7. Once authorized, the proposed action is executed, by the execution agent. It performs a swap (Satpathy's API).
-*/
-
-// app/api/orchestrate/route.js
 import { PriceFeedAgent } from "@/ai/agents/PriceFeedAgent.js";
 import { NewsFeedAgent } from "@/ai/agents/NewsFeedAgent.js";
 import { ReputationDecisionAgent } from "@/ai/agents/ReputationFeedAgent.js";
 import { DecisionAgent } from "@/ai/agents/DecisionAgent.js";
-import { AuthorizationAgent } from "@/ai/agents/AuthorizationAgent";
-// import { ExecutiorAgent } from "@/ai/agents/ExecutionAgent.js";
+import { AuthorizationAgent } from "@/ai/agents/AuthorizationAgent.js";
+
+// Simple helper for async delays
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * This endpoint orchestrates multiple agents in sequence.
- * POST /api/orchestrator
+ * Server-Sent Events orchestrator
+ * Streams live updates as agents run
  */
 export async function POST(request) {
   try {
-    console.log("Orchestrator invoked");
-    
-    const body = await request.json();
-    console.log("Received body:", body);
-
+    // Parse JSON body safely
+    const bodyText = await request.text();
+    const body = bodyText ? JSON.parse(bodyText) : {};
     const triggerReason = body.triggerReason || "Scheduled trigger";
+    const portfolio = body.portfolio || {};
 
-    console.log("Orchestrator triggered due to:", triggerReason);
-    console.log(await new DecisionAgent().chooseRequiredFeed(triggerReason));
+    // Set up the stream
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
 
-    const priceAgent = new PriceFeedAgent();
-    const newsAgent = new NewsFeedAgent();
-    const reputationAgent = new ReputationDecisionAgent();
-    const decisionAgent = new DecisionAgent();
-    const authAgent = new AuthorizationAgent();
+        // Helper to send messages to the client
+        const send = (obj) =>
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
 
-    let revisionCount = 0;
-    let authorized = false;
-    let callAgents = {
-        priceFeed: true,
-        newsFeed: true,
-        reputationFeed: true
-    }
-    let context = {};
+        send({ type: "status", message: "🧠 Orchestrator started..." });
+        await delay(1000);
 
-    let priceAgentResponse = "";
-    let newsAgentResponse = "";
-    let reputationAgentResponse = "";
-    //Keep a track of the memory as well as a message array
+        send({ type: "info", message: `Trigger reason: ${triggerReason}` });
+        await delay(1000);
 
-    while (!authorized && revisionCount <= 2) {
-        console.log(`--- Orchestration Iteration ${revisionCount + 1} ---`);
+        send({ type: "info", message: `Analyzing portfolio: ${JSON.stringify(portfolio)}` });
+        await delay(1500);
 
-        if (callAgents.priceFeed) {
+        const priceAgent = new PriceFeedAgent();
+        const newsAgent = new NewsFeedAgent();
+        const reputationAgent = new ReputationDecisionAgent();
+        const decisionAgent = new DecisionAgent();
+        const authAgent = new AuthorizationAgent();
+
+        let revisionCount = 0;
+        let authorized = false;
+        let callAgents = { priceFeed: true, newsFeed: true, reputationFeed: true };
+        let context = {};
+
+        let priceAgentResponse = "";
+        let newsAgentResponse = "";
+        let reputationAgentResponse = "";
+
+        while (!authorized && revisionCount <= 2) {
+          send({ type: "loop", message: `🔁 Iteration ${revisionCount + 1}` });
+          await delay(1000);
+
+          if (callAgents.priceFeed) {
             priceAgentResponse = await priceAgent.getResponse(triggerReason);
-            console.log("Price Agent Response:", priceAgentResponse);
-        }
-    
-        if (callAgents.newsFeed) {
-            newsAgentResponse = await newsAgent.getNews(triggerReason);
-            console.log("News Agent Response:", newsAgentResponse);
-        }
-    
-        if (callAgents.reputationFeed) {
-            reputationAgentResponse = await reputationAgent.assessReputation(triggerReason);
-            console.log("Reputation Agent Response:", reputationAgentResponse);
-        }
+            send({ type: "agent", name: "PriceFeedAgent", message: priceAgentResponse });
+          }
 
-        context = {
+          if (callAgents.newsFeed) {
+            newsAgentResponse = await newsAgent.getNews(triggerReason);
+            send({ type: "agent", name: "NewsFeedAgent", message: newsAgentResponse });
+          }
+
+          if (callAgents.reputationFeed) {
+            reputationAgentResponse = await reputationAgent.assessReputation(triggerReason);
+            send({ type: "agent", name: "ReputationAgent", message: reputationAgentResponse });
+          }
+
+          context = {
             ...context,
             triggerReason,
             prices: priceAgentResponse || "",
             news: newsAgentResponse || "",
             reputation: reputationAgentResponse || "",
-        };
-        
-        const portfolio = body.portfolio ;
+          };
 
-        const proposedAction = await decisionAgent.proposeAction(context,portfolio);
+          const proposedAction = await decisionAgent.proposeAction(context, portfolio);
+          send({ type: "decision", message: "Proposed Action", data: proposedAction });
 
-        console.log("Proposed Action:", proposedAction);
-
-        //This is hard coded and add the user portfolio context as well and proper user settings input
-        const userSettings = {
+          const userSettings = {
             maxSwapPercentage: 50,
             allowedTokens: ["ETH", "AAVE", "USDC"],
             allowedActions: ["swap", "stake", "unstake"],
-        };
+          };
 
-        authorized = await authAgent.authorizeAction(proposedAction,userSettings);
-        
-        if (!authorized) {
-            console.log(`Action not authorized. Preparing for revision...`);
+          authorized = await authAgent.authorizeAction(proposedAction, userSettings);
+
+          if (!authorized) {
             revisionCount++;
-
-            // Determine which agents to call in the next iteration based on decision agent feedback
+            send({ type: "auth", message: "Action not authorized, revising..." });
             const feedDecision = await decisionAgent.chooseRequiredFeed(context);
-            callAgents = {
-                priceFeed: feedDecision.priceFeed,
-                newsFeed: feedDecision.newsFeed,
-                reputationFeed: feedDecision.reputationFeed
-            };
-        } else {
-            console.log("Action authorized.");
-            //Execute action
-            return Response.json(proposedAction);
+            callAgents = feedDecision;
+          } else {
+            send({ type: "auth", message: "✅ Action authorized!" });
+            send({ type: "action", message: "Executing action...", data: proposedAction });
+          }
+
+          await delay(1000);
         }
 
-    }
-        console.log("Maximum revisions reached. Action not authorized.");
-        return Response.json(
-          { success: false, error: "Action not authorized after maximum revisions." },
-          { status: 403 }
-        );
-    
-  } catch (error) {
-    console.error("Error in orchestrator:", error);
-    return Response.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+        if (!authorized) {
+          send({
+            type: "error",
+            message: "Action not authorized after maximum revisions.",
+          });
+        }
+
+        send({ type: "status", message: "✅ Orchestration complete." });
+        controller.close();
+      },
+    });
+
+    // Return streaming response
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+      },
+    });
+  } catch (err) {
+    console.error("Error in orchestrator:", err);
+    return Response.json({ success: false, error: err.message }, { status: 500 });
   }
 }
