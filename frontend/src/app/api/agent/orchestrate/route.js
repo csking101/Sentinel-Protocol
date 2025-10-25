@@ -3,9 +3,45 @@ import { NewsFeedAgent } from "@/ai/agents/NewsFeedAgent.js";
 import { ReputationDecisionAgent } from "@/ai/agents/ReputationFeedAgent.js";
 import { DecisionAgent } from "@/ai/agents/DecisionAgent.js";
 import { AuthorizationAgent } from "@/ai/agents/AuthorizationAgent.js";
+import { summarizeAgentResponse } from "@/ai/agents/lib.js";
 
 // Simple helper for async delays
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function formatProposedActionMessage(action) {
+  if (!action) return "No action proposed.";
+
+  const time = new Date(action.timestamp).toLocaleString();
+
+  let actionStr = "";
+
+  switch (action.action) {
+    case "swap":
+      actionStr = `Swap from ${action.fromToken} to ${action.toToken} of amount ${action.amount} ${action.fromToken}, with reason - ${action.reason}`;
+      break;
+
+    case "stake":
+      actionStr = `📈 **Stake**
+Token: ${action.toToken}
+Amount: ${action.amount} ${action.unit}
+Reason: ${action.reason}
+Time: ${time}`;
+      break;
+
+    case "unstake":
+      actionStr = `📉 **Unstake**
+From: ${action.fromToken}
+Amount: ${action.amount} ${action.unit}
+Reason: ${action.reason}
+Time: ${time}`;
+      break;
+
+    default:
+      actionStr = `⚠️ Unknown action type: ${JSON.stringify(action)}`;
+  }
+
+  return actionStr;
+}
 
 /**
  * Server-Sent Events orchestrator
@@ -34,7 +70,10 @@ export async function POST(request) {
         send({ type: "info", message: `Trigger reason: ${triggerReason}` });
         await delay(1000);
 
-        send({ type: "info", message: `Analyzing portfolio: ${JSON.stringify(portfolio)}` });
+        const formattedPortfolio = Object.entries(portfolio)
+          .map(([token, amount]) => `${token}: ${amount}`)
+          .join(", "); // or "\n" if you want each on a new line
+        send({ type: "info", message: `Analyzing portfolio: ${formattedPortfolio}` });
         await delay(1500);
 
         const priceAgent = new PriceFeedAgent();
@@ -58,17 +97,23 @@ export async function POST(request) {
 
           if (callAgents.priceFeed) {
             priceAgentResponse = await priceAgent.getResponse(triggerReason);
-            send({ type: "agent", name: "PriceFeedAgent", message: priceAgentResponse });
+            // const summarizedPriceResponse = await summarizeAgentResponse(priceAgentResponse);
+            // priceAgentResponse = summarizedPriceResponse || priceAgentResponse;
+            send({ type: "agent", name: "Price Feed Agent", message: priceAgentResponse });
           }
 
           if (callAgents.newsFeed) {
             newsAgentResponse = await newsAgent.getNews(triggerReason);
-            send({ type: "agent", name: "NewsFeedAgent", message: newsAgentResponse });
+            const summarizedNewsResponse = await summarizeAgentResponse(newsAgentResponse);
+            newsAgentResponse = summarizedNewsResponse || newsAgentResponse;
+            send({ type: "agent", name: "News Feed Agent", message: newsAgentResponse });
           }
 
           if (callAgents.reputationFeed) {
             reputationAgentResponse = await reputationAgent.assessReputation(triggerReason);
-            send({ type: "agent", name: "ReputationAgent", message: reputationAgentResponse });
+            const summarizedReputationResponse = await summarizeAgentResponse(reputationAgentResponse);
+            reputationAgentResponse = summarizedReputationResponse || reputationAgentResponse;
+            send({ type: "agent", name: "Reputation Agent", message: reputationAgentResponse });
           }
 
           context = {
@@ -80,7 +125,10 @@ export async function POST(request) {
           };
 
           const proposedAction = await decisionAgent.proposeAction(context, portfolio);
-          send({ type: "decision", message: "Proposed Action", data: proposedAction });
+          send({
+  type: "decision",
+  message: formatProposedActionMessage(proposedAction),
+});
 
           const userSettings = {
             maxSwapPercentage: 50,

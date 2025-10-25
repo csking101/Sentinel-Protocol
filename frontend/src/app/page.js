@@ -180,7 +180,7 @@ export default function Home() {
   // ── Orchestration stream ──
   async function startOrchestration() {
     setIsStreaming(true);
-    setStreamLogs([{ msg: 'Starting orchestration…' }]);
+    setStreamLogs([{ message: 'Starting orchestration…' }]);
 
     const payload = {
       triggerReason:
@@ -372,8 +372,7 @@ export default function Home() {
           ⚠️ Market Alert — ETH Sell Activity Detected
         </h2>
         <p className="text-gray-700 mb-4 text-sm leading-relaxed">
-          Trump’s 100% China tariff triggers a massive crypto crash, wiping out leveraged positions as Bitcoin, Ethereum, and Solana tumble.
-          Traders scramble to limit losses (<span className="italic text-gray-500">source: financialexpress.com</span>).
+          Trump’s 100% China tariff triggers a massive crypto crash, wiping out leveraged positions as Bitcoin, Ethereum, and Solana tumble.(<span className="italic text-gray-500">source: financialexpress.com</span>).
         </p>
 
         {/* Stream log area */}
@@ -403,7 +402,7 @@ export default function Home() {
         </div>
 
         {/* Buttons */}
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-between items-center">
           {!isStreaming ? (
             <button
               disabled={true}
