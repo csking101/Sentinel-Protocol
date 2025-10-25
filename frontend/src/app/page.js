@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import TokenCard from '@/components/TokenCard';
 import AgentOperationsCard from '@/components/AgentOperationsCard';
+import { VincentProvider, useVincent } from '@/context/VincentContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, Activity } from 'lucide-react';
 import { loadTokens } from './lib';
@@ -61,9 +62,8 @@ const initialOperations = [
   },
 ];
 
-// ──────────────────────────── Component ────────────────────────────
-export default function Home() {
-  const [connectedAddress, setConnectedAddress] = useState(null);
+function HomeContent() {
+  const { isConnected, walletAddress, connect, isConnecting } = useVincent();
   const [tokens, setTokens] = useState([]);
   const [operations, setOperations] = useState(initialOperations);
 
@@ -118,7 +118,7 @@ export default function Home() {
       clearTimeout(t);
       clearTimeout(g);
     }
-  }, [connectedAddress]);
+  }, [isConnected]);
 
   // ── Orchestration stream ──
   async function startOrchestration() {
@@ -200,7 +200,7 @@ export default function Home() {
       <Header onConnect={setConnectedAddress} connectedAddress={connectedAddress} />
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {!connectedAddress ? (
+        {!isConnected ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -209,20 +209,19 @@ export default function Home() {
             <div className="bg-black p-12 rounded-3xl mb-8 border-2 border-black">
               <Wallet className="w-24 h-24 text-white" />
             </div>
-            <h2 className="text-4xl font-bold mb-4">Connect Your Wallet</h2>
-            <p className="text-gray-600 max-w-md mb-8 text-lg text-center">
-              Connect MetaMask to enable AI-powered risk management.
+            <h2 className="text-4xl font-bold text-black mb-4 tracking-tight">
+              Connect Your Wallet
+            </h2>
+            <p className="text-gray-600 text-center max-w-md font-medium mb-8 text-lg">
+              Connect with Vincent to start protecting your crypto
+              assets with intelligent AI-powered risk management.
             </p>
             <button
-              onClick={async () => {
-                if (window.ethereum) {
-                  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                  setConnectedAddress(accounts[0]);
-                } else alert('Install MetaMask');
-              }}
+              onClick={connect}
               className="flex items-center gap-3 px-8 py-4 rounded-xl font-bold bg-black text-white border-2 border-black hover:bg-gray-800"
             >
-              <Wallet className="w-6 h-6" /> Connect Wallet
+              <Wallet className="w-6 h-6" />
+              {isConnecting ? 'Connecting...' : 'Connect with Vincent'}
             </button>
           </motion.div>
         ) : (
@@ -374,5 +373,13 @@ export default function Home() {
 </AnimatePresence>
 
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <VincentProvider>
+      <HomeContent />
+    </VincentProvider>
   );
 }
