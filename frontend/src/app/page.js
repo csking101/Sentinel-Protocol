@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import TokenCard from '@/components/TokenCard';
 import AgentOperationsCard from '@/components/AgentOperationsCard';
@@ -133,6 +133,15 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false);
   const [streamLogs, setStreamLogs] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
+
+  const logsContainerRef = useRef(null);
+  
+  // Auto-scroll logs to bottom
+  useEffect(() => {
+  if (logsContainerRef.current) {
+    logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight;
+  }
+}, [streamLogs]); // scrolls whenever new logs come in
 
   // Simulate live price changes
   useEffect(() => {
@@ -369,6 +378,8 @@ export default function Home() {
 
         {/* Stream log area */}
         <div 
+        ref={logsContainerRef}
+        style={{ scrollBehavior: "smooth" }} 
         className="bg-gray-50 rounded-xl p-4 max-h-[45vh] overflow-y-auto border border-gray-200 mb-4 space-y-2">
           {streamLogs.map((log, i) => (
             <motion.div
