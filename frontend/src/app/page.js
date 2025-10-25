@@ -155,11 +155,17 @@ export default function Home() {
   useEffect(() => {
     if (!connectedAddress) return;
     const t = setTimeout(() => {
-      setShowModal(true);
+        setShowModal(true);
       }
       , 5000);
-    
-    return () => clearTimeout(t);
+    const g = setTimeout(() => {
+      setIsStreaming(true);
+      startOrchestration();
+    },7000);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(g);
+    }
   }, [connectedAddress]);
 
   // ── Orchestration stream ──
@@ -340,56 +346,80 @@ export default function Home() {
 
       {/* ─────────────── Modal ─────────────── */}
       <AnimatePresence>
-        {showModal && (
-          <motion.div
-            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+  {showModal && (
+    <motion.div
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="bg-white rounded-2xl p-10 max-h-[80vh] w-full max-w-lg shadow-2xl border-2 border-black"
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.8 }}
+      >
+        <h2 className="text-2xl font-bold mb-2 text-black">
+          ⚠️ Market Alert — ETH Sell Activity Detected
+        </h2>
+        <p className="text-gray-700 mb-4 text-sm leading-relaxed">
+          Trump’s 100% China tariff triggers a massive crypto crash, wiping out leveraged positions as Bitcoin, Ethereum, and Solana tumble.
+          Traders scramble to limit losses (<span className="italic text-gray-500">source: financialexpress.com</span>).
+        </p>
+
+        {/* Stream log area */}
+        <div 
+        className="bg-gray-50 rounded-xl p-4 max-h-[45vh] overflow-y-auto border border-gray-200 mb-4 space-y-2">
+          {streamLogs.map((log, i) => (
             <motion.div
-              className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl border-2 border-black"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className={`
+                px-3 py-2 rounded-lg text-sm font-medium shadow-sm border
+                ${log.type === "agent" ? "bg-blue-100 border-blue-300 text-blue-900"
+                : log.type === "decision" ? "bg-yellow-100 border-yellow-300 text-yellow-900"
+                : log.type === "auth" ? "bg-green-100 border-green-300 text-green-900"
+                : log.type === "error" ? "bg-red-100 border-red-300 text-red-900"
+                : "bg-gray-100 border-gray-200 text-gray-800"}
+              `}
             >
-              <h2 className="text-2xl font-bold mb-2 text-black">
-                Market Alert — ETH Sell Activity Detected
-              </h2>
-              <p className="text-gray-700 mb-4 text-sm leading-relaxed">
-                Trump’s 100% China tariff triggers a massive crypto crash, wiping out leveraged positions as Bitcoin, Ethereum, and Solana tumble. Traders scramble to limit losses (source: financialexpress.com).
-              </p>
-
-              <div className="bg-gray-100 rounded-lg p-3 h-40 overflow-y-auto mb-4 text-sm font-mono">
-                {streamLogs.map((log, i) => (
-                  <div key={i} className="mb-1">
-                    ▸ {typeof log === 'string' ? log : JSON.stringify(log)}
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-end gap-3">
-                {!isStreaming ? (
-                  <button
-                    onClick={startOrchestration}
-                    className="px-5 py-2 bg-black text-white rounded-xl font-semibold"
-                  >
-                    Start Rebalance
-                  </button>
-                ) : (
-                  <span className="text-gray-600">Streaming updates…</span>
-                )}
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="px-5 py-2 bg-gray-200 rounded-xl font-semibold"
-                >
-                  Close
-                </button>
-              </div>
+              <strong>{log.name || log.type?.toUpperCase() || "INFO"}:</strong>{" "}
+              {log.message || JSON.stringify(log.data || log)}
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          ))}
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-end gap-3">
+          {!isStreaming ? (
+            <button
+              disabled={true}
+              className="px-5 py-2 bg-black text-white rounded-xl font-semibold"
+            >
+              Starting Rebalance...
+            </button>
+          ) : (
+            <button
+              disabled
+              className="px-5 py-2 bg-black text-white rounded-xl font-semibold"
+            >
+              Streaming Updates...
+            </button>
+          )}
+          <button
+            onClick={() => setShowModal(false)}
+            className="px-5 py-2 bg-gray-200 rounded-xl font-semibold"
+          >
+            Close
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
     </div>
   );
 }
