@@ -88,7 +88,7 @@ function HomeContent() {
 
   // Simulate live price changes
   useEffect(() => {
-    if (!connectedAddress) return;
+    if (!walletAddress) return;
     setTokens(mockTokens);
     const interval = setInterval(() => {
       setTokens((prev) =>
@@ -101,11 +101,11 @@ function HomeContent() {
       );
     }, 3000);
     return () => clearInterval(interval);
-  }, [connectedAddress]);
+  }, [walletAddress]);
 
   // Trigger modal 10 s after connect
   useEffect(() => {
-    if (!connectedAddress) return;
+    if (!walletAddress) return;
     const t = setTimeout(() => {
         setShowModal(true);
       }
@@ -212,7 +212,7 @@ function HomeContent() {
               Checking authentication...
             </h2>
           </motion.div>
-        </main>
+        </main> 
       </div>
     );
   }
@@ -220,7 +220,7 @@ function HomeContent() {
   // ──────────────────────────── UI ────────────────────────────
   return (
     <div className="min-h-screen bg-white">
-      <Header onConnect={setConnectedAddress} connectedAddress={connectedAddress} />
+      <Header />
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         {!isConnected ? (
@@ -316,7 +316,7 @@ function HomeContent() {
             </section>
 
             {/* Swap Example Section */}
-            <section className="mt-12">
+            {/* <section className="mt-12">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -330,7 +330,7 @@ function HomeContent() {
                 </h2>
               </motion.div>
 
-            </section>
+            </section> */}
           </>
         )}
       </main>
