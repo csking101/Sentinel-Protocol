@@ -194,6 +194,29 @@ function HomeContent() {
     0
   );
 
+  // Show loading state while checking authentication
+  if (isConnecting) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <main className="max-w-7xl mx-auto px-6 py-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-32"
+          >
+            <div className="bg-black p-12 rounded-3xl mb-8 border-2 border-black animate-pulse">
+              <Wallet className="w-24 h-24 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-black mb-4 tracking-tight">
+              Checking authentication...
+            </h2>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
+
   // ──────────────────────────── UI ────────────────────────────
   return (
     <div className="min-h-screen bg-white">
@@ -290,6 +313,23 @@ function HomeContent() {
                   <AgentOperationsCard key={i} operation={op} index={i} />
                 ))}
               </div>
+            </section>
+
+            {/* Swap Example Section */}
+            <section className="mt-12">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-3 mb-6"
+              >
+                <div className="bg-black p-2 rounded-xl">
+                  <Activity className="w-6 h-6 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-black tracking-tight">
+                  Execute Swap
+                </h2>
+              </motion.div>
+
             </section>
           </>
         )}

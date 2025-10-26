@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@lit-protocol/vincent-ability-erc20-approval": "3.1.0",
     "@lit-protocol/vincent-app-sdk": "^2.2.3",
-    "ethers": "^6.15.0",
+    "@sentinel-protocol/swap-tokens-hedera-testnet": "^1.0.4",
+    "ethers": "^5.8.0",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.546.0",
     "next": "15.5.6",
