@@ -32,7 +32,7 @@ const swapParams = {
   tokenFrom: '0x5bf5d13184623EEB526490f4dc1238e8e71b96Cc', // MemeCoin
   tokenTo: '0x575Ce3448217fE6451654801e776115081F97020', // StableCoin
   amount: '100', // 100 tokens
-  swapAgentAddress: '0x0765ba4d82553cD6ce053E6273567cB6A32B4fa0',
+  swapAgentAddress: '0x7deF1dDf0074D9315BFC848c0c2d61F46ff80266',
   rpcUrl: 'https://testnet.hashio.io/api', // Optional
 };
 ```
@@ -164,7 +164,7 @@ Example deployed contracts:
 - **StableCoin**: `0x575Ce3448217fE6451654801e776115081F97020`
 - **NativeCoin**: `0x7FB87AAf2F2047a6F74018113326607d725CC715`
 - **DeFiCoin**: `0xD3a23a772c7987a8BFb724e9330aB5C41B685356`
-- **SwapAgent**: `0x0765ba4d82553cD6ce053E6273567cB6A32B4fa0`
+- **SwapAgent**: `0x7deF1dDf0074D9315BFC848c0c2d61F46ff80266`
 
 ## License
 
