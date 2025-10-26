@@ -46,6 +46,8 @@ const reputationTool = new DynamicStructuredTool({
         tokens = await contract.methods.getAllTokens().call();
       }
 
+      console.log('HI ', tokens);
+
       if (!tokens || tokens.length === 0) return "No tokens found on the contract.";
 
       const results = [];
@@ -57,7 +59,8 @@ const reputationTool = new DynamicStructuredTool({
           rawData = Object.values(rawData).slice(0, 4);
         }
 
-        const [market, fundamental, risk, reputation] = rawData.map(x => Number(x) / scale);
+        console.log('RAW DATA ', rawData);
+        const [market, fundamental, risk, reputation] = rawData.map(x => Number(x));
 
         if (debug) console.log(`[DEBUG] ${t} raw scores:`, rawData);
 
@@ -71,6 +74,7 @@ const reputationTool = new DynamicStructuredTool({
 
       return results.join("\n");
     } catch (error) {
+      console.error("Error in reputation_checker tool:", error);
       return `Error fetching on-chain reputation data: ${error.message}`;
     }
   },
