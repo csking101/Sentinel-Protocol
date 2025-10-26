@@ -24,13 +24,5 @@
     "eslint.config.js",
     "eslint.config.cjs",
     "eslint.config.mjs"
-  ],
-  "references": [
-    {
-      "path": "../policy-counter/tsconfig.lib.json"
-    },
-    {
-      "path": "../ability-native-send/tsconfig.lib.json"
-    }
   ]
 }

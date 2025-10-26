@@ -1,30 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { useVincent } from '@/context/VincentContext';
 
-export default function Header({ onConnect, connectedAddress }) {
-  const [isConnecting, setIsConnecting] = useState(false);
-
-  const connectWallet = async () => {
-    setIsConnecting(true);
-    try {
-      if (typeof window.ethereum !== 'undefined') {
-        const accounts = await window.ethereum.request({
-          method: 'eth_requestAccounts',
-        });
-        onConnect(accounts[0]);
-      } else {
-        alert('Please install MetaMask to use this application');
-      }
-    } catch (error) {
-      console.error('Error connecting wallet:', error);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
+export default function Header() {
+  const { isConnected, isConnecting, walletAddress, connect, error } = useVincent();
 
   const formatAddress = (address) => {
     if (!address) return '';
@@ -58,16 +40,27 @@ export default function Header({ onConnect, connectedAddress }) {
           </div>
         </div>
 
-        {connectedAddress && (
+        <div className="flex items-center gap-3">
+          {error && (
+            <div className="text-red-600 text-sm font-medium mr-2">
+              {error}
+            </div>
+          )}
+          
           <button
-            onClick={connectWallet}
+            onClick={connect}
             disabled={isConnecting}
             className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all border-2 bg-black text-white border-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Wallet className="w-5 h-5" />
-            {formatAddress(connectedAddress)}
+            {isConnecting 
+              ? 'Connecting...' 
+              : isConnected 
+                ? formatAddress(walletAddress)
+                : 'Connect with Vincent'
+            }
           </button>
-        )}
+        </div>
       </div>
     </motion.header>
   );

@@ -3,12 +3,6 @@
   "compileOnSave": false,
   "references": [
     {
-      "path": "./packages/policy-counter"
-    },
-    {
-      "path": "./packages/ability-native-send"
-    },
-    {
       "path": "./packages/test-e2e"
     }
   ]
