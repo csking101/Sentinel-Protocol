@@ -37,13 +37,15 @@ This system creates a **trust-minimized, intelligent, and self-evolving orchestr
 
 ---
 
-## 💡 Architecture
+## 💡 Overall Architecture Diagram
+
+<img width="4058" height="3446" alt="Sentinel Protocol Architecture Diagram" src="https://github.com/user-attachments/assets/20a230f3-3487-455d-94f1-19dd37ecbd44" />
 
 <!-- Add the overall diagram here & the explanation for the flow -->
 
+## AI Agent Orchestration Diagram
 
-<!-- Add the AI orchestration diagram here -->
-![Architecture Diagram](docs/architecture.png)
+![Sentinel Protocol Agent](https://github.com/user-attachments/assets/8b47d93a-0b57-44ba-911c-87e17faf191d)
 
 The orchestration follows this flow:
 1. A trigger (periodic or market-based) hits the Next.js backend endpoint `/api/agent/orchestrate`.
