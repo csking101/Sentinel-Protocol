@@ -143,13 +143,15 @@ curl -X POST http://localhost:3000/api/agent/orchestrate \
 
 ---
 
-## 🧭 Roadmap
+## 🧭 TO-DO
 
-* [ ] Finalize reputation sidechain structure on **Hedera**
-* [ ] Add **multi-wallet portfolio tracking**
-* [ ] Integrate **Vincent** for delegated execution
-* [ ] Improve **AI explainability** for decisions
-* [ ] Expand to **multi-chain support**
+*  Finalize reputation sidechain structure on **Hedera**
+*  Add **multi-wallet portfolio tracking**
+<!-- * [ ] Integrate **Vincent** for delegated execution -->
+*  Improve **AI explainability** for decisions
+*  Improve the stochastic computation model
+*  Add more data sources for the decision agent
+*  Expand to **multi-chain support**
 <!-- see if this is needed -->
 
 ---
