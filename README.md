@@ -148,7 +148,7 @@ curl -X POST http://localhost:3000/api/agent/orchestrate \
 ## Deployment
 - The Hedera Reputation Smart Contract - [https://repo.sourcify.dev/11155111/0x672273a0f08D25EbFF13748cDFb3Fb45105070B3](https://repo.sourcify.dev/11155111/0x672273a0f08D25EbFF13748cDFb3Fb45105070B3)
 - The Base Sepolia Reputation Smart Contract - [https://hashscan.io/testnet/contract/0.0.7131213](https://hashscan.io/testnet/contract/0.0.7131213)
-- Vincent Ability NPM - [https://www.npmjs.com/package/@sentinel-protocol/swap-tokens-hedera-testnet]
+- Vincent Ability NPM - https://www.npmjs.com/package/@sentinel-protocol/swap-tokens-hedera-testnet
 
 ---
 
