@@ -6,25 +6,40 @@ import TokenCard from '@/components/TokenCard';
 import AgentOperationsCard from '@/components/AgentOperationsCard';
 import { VincentProvider, useVincent } from '@/context/VincentContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Activity } from 'lucide-react';
-import { loadTokens } from './lib';
+import { Wallet, Activity, RefreshCw } from 'lucide-react';
+import { useTokenBalances } from '@/hooks/useTokenBalances';
 
 const initialOperations = [
   {
     type: 'Multi-Token Hedge',
-    timestamp: '2 hours ago',
+    timestamp: '10 hours ago',
     status: 'completed',
     risk: 'high',
     riskDescription: 'High market volatility detected across altcoins',
     reason:
-      'Volatility in DOGE and MATIC prompted a hedge to USDC to protect capital.',
+      'Sudden volatility spike in DOGE and ETH markets prompted immediate hedge to USDC to protect capital from further downside.',
     swaps: [
-      { from: 'DOGE', to: 'USDC', fromAmount: '5420', toAmount: '445.1' },
-      { from: 'ETH', to: 'USDC', fromAmount: '0.5', toAmount: '1421.27' },
+      { 
+        from: 'DOGE', 
+        to: 'USDC', 
+        fromAmount: '5,420.00', 
+        toAmount: '433.60',
+        fromValue: '433.60',
+        toValue: '433.60',
+      },
+      { 
+        from: 'ETH', 
+        to: 'USDC', 
+        fromAmount: '0.5000', 
+        toAmount: '1,400.00',
+        fromValue: '1,400.00',
+        toValue: '1,400.00',
+      },
     ],
-  },{
+  },
+  {
     type: 'Risk Mitigation',
-    timestamp: '5 hours ago',
+    timestamp: '2 days ago',
     status: 'completed',
     risk: 'medium',
     riskDescription: 'Moderate risk from anticipated regulatory news',
@@ -35,15 +50,15 @@ const initialOperations = [
         from: 'AAVE',
         to: 'USDC',
         fromAmount: '12.5000',
-        toAmount: '1,785.75',
-        fromValue: '1,785.75',
-        toValue: '1,785.75',
+        toAmount: '1,787.50',
+        fromValue: '1,787.50',
+        toValue: '1,787.50',
       },
     ],
   },
   {
     type: 'Opportunity Swap',
-    timestamp: '1 day ago',
+    timestamp: '1 week ago',
     status: 'completed',
     risk: 'low',
     riskDescription: 'Low risk rebalancing based on positive market signals',
@@ -54,7 +69,7 @@ const initialOperations = [
         from: 'USDC',
         to: 'ETH',
         fromAmount: '2,000.00',
-        toAmount: '0.7036',
+        toAmount: '0.7143',
         fromValue: '2,000.00',
         toValue: '2,000.00',
       },
@@ -64,7 +79,16 @@ const initialOperations = [
 
 function HomeContent() {
   const { isConnected, walletAddress, connect, isConnecting } = useVincent();
-  const [tokens, setTokens] = useState([]);
+  
+  // Display balances from this wallet (using only the public address - safe!)
+  const displayBalancesFrom = '0x21c048DD2EFfFBFB39B7b2B8AbcEc9446850d846';
+  
+  // Use the balance hook with manual refresh only (no automatic polling)
+  const { tokens, setTokens, isLoadingBalances, refreshBalances, lastRefresh } = useTokenBalances(
+    walletAddress ? displayBalancesFrom : null,
+    0 // Disable automatic polling - manual refresh only
+  );
+  
   const [operations, setOperations] = useState(initialOperations);
 
   const [showModal, setShowModal] = useState(false);
@@ -72,12 +96,6 @@ function HomeContent() {
   const [isStreaming, setIsStreaming] = useState(false);
 
   const logsContainerRef = useRef(null);
-  
-  const [mockTokens, setMockTokens] = useState([]);
-
-  useEffect(() => {
-    loadTokens().then(setMockTokens);
-  }, []);
 
   // Auto-scroll logs to bottom
   useEffect(() => {
@@ -86,39 +104,47 @@ function HomeContent() {
   }
 }, [streamLogs]); // scrolls whenever new logs come in
 
-  // Simulate live price changes
+  // Simulate live price changes for fetched tokens
   useEffect(() => {
-    if (!walletAddress) return;
-    setTokens(mockTokens);
+    if (!walletAddress || tokens.length === 0) return;
+    
     const interval = setInterval(() => {
       setTokens((prev) =>
         prev.map((t) => {
-          const f = 1 + (Math.random() - 0.75) * 0.0002;
+          const f = 1 + (Math.random() - 0.5) * 0.002; // Small price fluctuation
           const newPrice = t.price * f;
-          const newHist = [...t.priceHistory.slice(1), { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), price: newPrice }];
-          return { ...t, price: newPrice, change: ((newPrice - t.price) / t.price) * 100, priceHistory: newHist };
+          const newHist = [...t.priceHistory.slice(1), { 
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+            price: newPrice 
+          }];
+          return { 
+            ...t, 
+            price: newPrice, 
+            change: ((newPrice - t.price) / t.price) * 100, 
+            priceHistory: newHist 
+          };
         })
       );
     }, 3000);
     return () => clearInterval(interval);
-  }, [walletAddress]);
+  }, [walletAddress, tokens.length]);
 
-  // Trigger modal 10 s after connect
+  // Trigger modal 5s after connect
   useEffect(() => {
     if (!walletAddress) return;
     const t = setTimeout(() => {
         setShowModal(true);
       }
-      , 5000);
+      , 60000);
     const g = setTimeout(() => {
       setIsStreaming(true);
       startOrchestration();
-    },7000);
+    },62000);
     return () => {
       clearTimeout(t);
       clearTimeout(g);
     }
-  }, [isConnected]);
+  }, [walletAddress]);
 
   // ── Orchestration stream ──
   async function startOrchestration() {
@@ -128,7 +154,7 @@ function HomeContent() {
     const payload = {
       triggerReason:
         "High sell activity in ETH market due to Trump's 100% China tariff announcement",
-      portfolio: { ETH: 5, USDC: 1000 },
+      portfolio: { ETH: 900.5, USDC: 4499.0, HBAR: 749.14542 },
     };
 
     const response = await fetch('/api/agent/orchestrate', {
@@ -282,17 +308,58 @@ function HomeContent() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-3 mb-6"
+                className="flex items-center justify-between mb-6"
               >
-                <div className="bg-black p-2 rounded-xl">
-                  <Wallet className="w-6 h-6 text-white" />
+                <div className="flex items-center gap-3">
+                  <div className="bg-black p-2 rounded-xl">
+                    <Wallet className="w-6 h-6 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold">Your Wallet</h2>
                 </div>
-                <h2 className="text-2xl font-bold">Your Wallet</h2>
+                
+                {/* Manual Refresh Button */}
+                <button
+                  onClick={refreshBalances}
+                  disabled={isLoadingBalances}
+                  className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  title="Refresh balances"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoadingBalances ? 'animate-spin' : ''}`} />
+                  <span className="text-sm font-medium">
+                    {isLoadingBalances ? 'Refreshing...' : 'Refresh'}
+                  </span>
+                </button>
               </motion.div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {tokens.map((t, i) => <TokenCard key={t.symbol} token={t} index={i} />)}
-              </div>
+              {lastRefresh && (
+                <p className="text-xs text-gray-500 mb-4">
+                  Last updated: {lastRefresh.toLocaleTimeString()}
+                </p>
+              )}
+
+              {isLoadingBalances ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+                    <p className="text-gray-600 font-medium">Loading your token balances...</p>
+                  </div>
+                </div>
+              ) : tokens.length === 0 ? (
+                <div className="bg-gray-50 rounded-2xl p-12 text-center border-2 border-dashed border-gray-300">
+                  <Wallet className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-gray-700 mb-2">No tokens found</h3>
+                  <p className="text-gray-600">
+                    This wallet doesn't have any tokens on Hedera testnet yet.
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Wallet: {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {tokens.map((t, i) => <TokenCard key={t.symbol} token={t} index={i} />)}
+                </div>
+              )}
             </section>
 
             {/* Agent Operations */}
@@ -351,7 +418,7 @@ function HomeContent() {
         exit={{ scale: 0.8 }}
       >
         <h2 className="text-2xl font-bold mb-2 text-black">
-          ⚠️ Market Alert — ETH Sell Activity Detected
+          ⚠️ Market Alert — ETH Buy Activity Detected
         </h2>
         <p className="text-gray-700 mb-4 text-sm leading-relaxed">
           Trump’s 100% China tariff triggers a massive crypto crash, wiping out leveraged positions as Bitcoin, Ethereum, and Solana tumble.(<span className="italic text-gray-500">source: financialexpress.com</span>).

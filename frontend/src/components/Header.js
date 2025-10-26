@@ -40,27 +40,25 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {error && (
-            <div className="text-red-600 text-sm font-medium mr-2">
-              {error}
-            </div>
-          )}
-          
-          <button
-            onClick={connect}
-            disabled={isConnecting}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all border-2 bg-black text-white border-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Wallet className="w-5 h-5" />
-            {isConnecting 
-              ? 'Connecting...' 
-              : isConnected 
-                ? formatAddress(walletAddress)
-                : 'Connect with Vincent'
-            }
-          </button>
-        </div>
+        {/* Only show wallet address button when connected */}
+        {isConnected && (
+          <div className="flex items-center gap-3">
+            {error && (
+              <div className="text-red-600 text-sm font-medium mr-2">
+                {error}
+              </div>
+            )}
+            
+            <button
+              onClick={connect}
+              disabled={isConnecting}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all border-2 bg-black text-white border-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Wallet className="w-5 h-5" />
+              {formatAddress(walletAddress)}
+            </button>
+          </div>
+        )}
       </div>
     </motion.header>
   );

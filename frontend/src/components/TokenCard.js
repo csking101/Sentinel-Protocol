@@ -13,7 +13,7 @@ import {
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function TokenCard({ token, index }) {
-  const [controlPercentage, setControlPercentage] = useState(50);
+  const [controlPercentage, setControlPercentage] = useState(token.agentControl || 50);
 
   const controlledAmount = (token.balance * controlPercentage) / 100;
 
@@ -36,6 +36,7 @@ export default function TokenCard({ token, index }) {
       'USDC': '/usdc.png',
       'MATIC': '/polygon.png',
       'AAVE': '/aave.png',
+      'HBAR': '/hedera.png',
     };
     return imageMap[symbol] || '/ethereum.png';
   };
