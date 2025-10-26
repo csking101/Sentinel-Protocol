@@ -13,6 +13,7 @@ Built with **Hedera**, **Pyth Network**, and **Lit Protocol (Vincent)**
 The system constantly monitors token credibility, detects market anomalies, and autonomously executes user-approved actions on your wallet — ensuring the safety of your funds during sudden market fluctuations.
 
 🔗 **GitHub:** [https://github.com/csking101/Sentinel-Protocol](https://github.com/csking101/Sentinel-Protocol)
+🔗 **Project Link:** [https://sentinel-protocol-red.vercel.app/]
 
 ---
 
