@@ -1,17 +1,16 @@
 # 🛡️ Sentinel Protocol
 
-**AI-Powered Web3 Reputation Protocol for Autonomous Portfolio Protection**
+**AI-Powered Web3 Reputation Protocol for Intelligent Portfolio Protection**
 
 Built with **Hedera**, **Pyth Network**, and **Lit Protocol (Vincent)**  
-> _Empowering long-term crypto investors through decentralized, AI-driven decision-making._
 
 ---
 
 ## 📘 Overview
 
-**Sentinel Protocol** is an **AI-powered Web3 reputation protocol** that protects long-term crypto investors by analyzing **news, market feeds, and on-chain reputation**, enabling **user-authorized portfolio actions**.  
+**Sentinel Protocol** is an intelligent AI-powered crypto wallet protector that prevents your tokens from losing value by intelligently executing swaps. It continuously analyzes news, market data, and on-chain reputation to safeguard your idle assets.
 
-The system continuously monitors token credibility, detects market anomalies, and autonomously executes user-approved actions (like swaps, stakes, or rebalances) — ensuring safety during sudden market changes.
+The system constantly monitors token credibility, detects market anomalies, and autonomously executes user-approved actions on your wallet — ensuring the safety of your funds during sudden market fluctuations.
 
 🔗 **GitHub:** [https://github.com/csking101/Sentinel-Protocol](https://github.com/csking101/Sentinel-Protocol)
 
@@ -25,15 +24,12 @@ By combining **AI agents**, **on-chain data**, and **user-controlled execution**
 At its core lies a network of **autonomous agents**:
 - **Price Feed Agent** — Fetches real-time prices from **Coingecko** and on-chain **Pyth** feeds  
 - **News Feed Agent** — Gathers market sentiment and coin-related headlines  
-- **Reputation Agent** — Evaluates token credibility from Hedera-based reputation data  
+- **Reputation Agent** — Pulls token credibility from on-chain contracts on Hedera  
 - **Decision Agent** — Aggregates all inputs and proposes optimal actions  
 - **Authorization Agent** — Validates and approves actions before execution  
-- **Execution Agent (Vincent)** — Executes approved trades or staking actions via **Lit Protocol**
+- **Execution Agent (Vincent)** — Executes approved swaps via **Lit Protocol**
 
 This system creates a **trust-minimized, intelligent, and self-evolving orchestration** between AI, blockchain data, and decentralized execution.
-
-<!-- Add information about Vincent integration and the cronjob and market trigger here -->
-
 
 ---
 
@@ -41,7 +37,19 @@ This system creates a **trust-minimized, intelligent, and self-evolving orchestr
 
 <img width="4058" height="3446" alt="Sentinel Protocol Architecture Diagram" src="https://github.com/user-attachments/assets/20a230f3-3487-455d-94f1-19dd37ecbd44" />
 
-<!-- Add the overall diagram here & the explanation for the flow -->
+Vincent App: Sentinel Protocol, APP ID: 8047866111
+
+Vincent Ability: Swap Tokens on Hedera Testnet
+
+Vincent Ability NPM: @sentinel-protocol/swap-tokens-hedera-testnet - https://www.npmjs.com/package/@sentinel-protocol/swap-tokens-hedera-testnet
+
+Pyth Integration: https://github.com/pyth-network/pyth-examples/pull/71
+
+Reputation Layer: 
+The Reputation Layer dynamically tracks and updates a token’s reputation score, reflecting its fundamental strength and risk profile. The score is based on factors like volatility, market stability, market cap, developer engangement and ecosystem strength . It evolves with changing market conditions but remains relatively stable against short-term fluctuations. The system aims to maximize asset value while staying token-agnostic—any token can be managed as long as its reputation score can be computed.
+
+Once the agent finalises on executing a swap, it is executed on via a Vincent Ability on behalf of the user. Lit Protocol takes care of signing the transaction after a delegated address executes the ability. 
+
 
 ## AI Agent Orchestration Diagram
 
@@ -97,7 +105,7 @@ Each agent communicates using **Hedera Agent Kit’s A2A (Agent-to-Agent)** fram
 - Uses **Lit Protocol (Vincent)** for cryptographically secure authorization
 - Executes trades or staking actions **only after explicit user policy validation**
 - Maintains a **non-custodial model** — users retain asset control
-<!-- Add more info here -->
+
 
 ---
 
@@ -140,21 +148,7 @@ curl -X POST http://localhost:3000/api/agent/orchestrate \
 ## Deployment
 - The Hedera Reputation Smart Contract - [https://repo.sourcify.dev/11155111/0x672273a0f08D25EbFF13748cDFb3Fb45105070B3](https://repo.sourcify.dev/11155111/0x672273a0f08D25EbFF13748cDFb3Fb45105070B3)
 - The Base Sepolia Reputation Smart Contract - [https://hashscan.io/testnet/contract/0.0.7131213](https://hashscan.io/testnet/contract/0.0.7131213)
-<!-- Add vercel link & vincent relevant stuff  -->
-
-
----
-
-## 🧭 TO-DO
-
-*  Finalize reputation sidechain structure on **Hedera**
-*  Add **multi-wallet portfolio tracking**
-<!-- * [ ] Integrate **Vincent** for delegated execution -->
-*  Improve **AI explainability** for decisions
-*  Improve the stochastic computation model
-*  Add more data sources for the decision agent
-*  Expand to **multi-chain support**
-<!-- see if this is needed -->
+- Vincent Ability NPM - [https://www.npmjs.com/package/@sentinel-protocol/swap-tokens-hedera-testnet]
 
 ---
 
